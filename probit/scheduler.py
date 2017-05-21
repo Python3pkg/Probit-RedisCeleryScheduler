@@ -26,7 +26,7 @@ class EntryProxy(dict):
         keys = self.__redis_connection.scan_iter(match="probit:schedule:*")
         for key in keys:
             entries = self.__redis_connection.hgetall(key.decode('utf-8'))
-            for entry in entries.values():
+            for entry in list(entries.values()):
                 data = json.loads(entry.decode('utf-8'))
                 if data["last_run_at"]:
                     data["last_run_at"] = datetime.strptime(data["last_run_at"], '%Y-%m-%dT%H:%M:%S.%f')
@@ -75,7 +75,7 @@ class EntryProxy(dict):
     def get_tasks(self):
         data = []
         entries = self.__redis_connection.hgetall(ENTRY_LIST_KEY)
-        for entry in entries.values():
+        for entry in list(entries.values()):
             entry = json.loads(entry.decode('utf-8'))
             if entry["last_run_at"]:
                 entry["last_run_at"] = datetime.strptime(entry["last_run_at"], '%Y-%m-%dT%H:%M:%S.%f')
@@ -87,7 +87,7 @@ class EntryProxy(dict):
     def get_for_company(self, company_id):
         data = []
         entries = self.__redis_connection.hgetall(ENTRY_LIST_KEY + ":" + company_id)
-        for entry in entries.values():
+        for entry in list(entries.values()):
             entry = json.loads(entry.decode('utf-8'))
             if entry["last_run_at"]:
                 entry["last_run_at"] = datetime.strptime(entry["last_run_at"], '%Y-%m-%dT%H:%M:%S.%f')
@@ -124,7 +124,7 @@ class EntryProxy(dict):
 
     def update(self, other):
         dict.update(self, other)
-        for entry in other.items():
+        for entry in list(other.items()):
             self._save(entry)
 
     def sync(self, name):
@@ -202,7 +202,7 @@ class ProbitScheduler(Scheduler):
         if len(schedule_keys) > 0:
             self.__redis_connection.hdel(ENTRY_LIST_KEY, *schedule_keys)"""
 
-        for name, entry_dict in schedule.items():
+        for name, entry_dict in list(schedule.items()):
             entry = ScheduleEntry(name, **entry_dict)
             if name not in self._schedule:
                 self._schedule[name] = entry
